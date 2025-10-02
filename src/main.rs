@@ -10,6 +10,8 @@
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs::{File, OpenOptions};
+use std::io::{self, BufRead, BufReader, BufWriter, Write};
 
 #[derive(Parser)]
 #[command(name = "todo_app")]
@@ -25,20 +27,14 @@ enum Commands {
     Close,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct Todo {
     name: String,
     description: String,
 }
 
-fn add_to_list(list: &mut HashMap<i32, Todo>, todo: Todo) {
-    let last = list.keys().cloned().max().unwrap_or(0);
-    list.insert(last + 1, todo);
-}
-
 fn main() {
     let args: Args = Args::parse();
-    let mut todo_list: HashMap<i32, Todo> = HashMap::new();
 
     match &args.command {
         Commands::Add { title, description } => {
@@ -48,14 +44,39 @@ fn main() {
                 name: title.to_string(),
                 description: description.to_string(),
             };
-            add_to_list(&mut todo_list, todo);
+            save_to_file(&todo);
         }
         Commands::List => {
             println!("Printing Todo List");
-            println!("{:?}", todo_list);
+            read_from_file("todo.json");
         }
         Commands::Close => {
             println!("Ending Session");
         }
+    }
+}
+
+fn save_to_file(t: &Todo) {
+    let mut file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open("todo.json")
+        .unwrap();
+
+    let json = serde_json::to_string(t).unwrap();
+    let json_bytes = json.as_bytes();
+
+    match file.write_all(json_bytes) {
+        Ok(()) => println!("Save successful"),
+        Err(e) => println!("Failed to process: {}", e),
+    }
+}
+
+fn read_from_file(file_name: &str) {
+    let f = File::open(file_name).unwrap();
+    let reader = BufReader::new(f);
+
+    for (index, line) in reader.lines().into_iter().enumerate() {
+        println!("{}: {}", index, line.unwrap());
     }
 }
