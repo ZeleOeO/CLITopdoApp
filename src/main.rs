@@ -63,9 +63,8 @@ fn save_to_file(t: &Todo) {
         .unwrap();
 
     let json = serde_json::to_string(t).unwrap();
-    let json_bytes = json.as_bytes();
 
-    match file.write_all(json_bytes) {
+    match writeln!(file, "{}", json) {
         Ok(()) => println!("Save successful"),
         Err(e) => println!("Failed to process: {}", e),
     }
