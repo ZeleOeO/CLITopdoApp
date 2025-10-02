@@ -24,6 +24,7 @@ enum Commands {
     Add { title: String, description: String },
     List,
     Close,
+    Delete { delete_index: i32 },
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -52,6 +53,9 @@ fn main() {
         Commands::Close => {
             println!("Ending Session");
         }
+        Commands::Delete { delete_index } => {
+            delete_todo("todo.json", *delete_index);
+        }
     }
 }
 
@@ -77,4 +81,34 @@ fn read_from_file(file_name: &str) {
     for (index, line) in reader.lines().into_iter().enumerate() {
         println!("{}: {}", index + 1, line.unwrap());
     }
+}
+
+fn delete_todo(file_name: &str, delete_index: i32) {
+    let f = File::open(file_name).unwrap();
+    let reader = BufReader::new(f);
+
+    let lines: Vec<String> = reader
+        .lines()
+        .enumerate()
+        .filter_map(|(i, line)| {
+            let line = line.ok()?;
+            if (i as i32) + 1 != delete_index {
+                Some(line)
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    let mut file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(file_name)
+        .unwrap();
+
+    for line in lines {
+        writeln!(file, "{}", line).unwrap();
+    }
+
+    println!("Deleted todo at line {} ", delete_index);
 }
