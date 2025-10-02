@@ -1,13 +1,7 @@
-//NOTE
-//Stuff I want to do
-//So I want to initalize it, when I initalize it will create a new todo list. It will also create a
-//boolean to show it's been initialized
-//Then when I'm adding to the todo list, I might use a hashmap, that will automatically generate a
-//key or something when it's been created for easy reference to it
-//Persistence is important
-//And then add a nice cute table
-
 use clap::{Parser, Subcommand};
+use comfy_table::modifiers::UTF8_ROUND_CORNERS;
+use comfy_table::presets::UTF8_FULL;
+use comfy_table::{Cell, ContentArrangement, Table};
 use serde::{Deserialize, Serialize};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
@@ -77,10 +71,31 @@ fn save_to_file(t: &Todo) {
 fn read_from_file(file_name: &str) {
     let f = File::open(file_name).unwrap();
     let reader = BufReader::new(f);
+    let mut table = Table::new();
+    table
+        .load_preset(UTF8_FULL)
+        .apply_modifier(UTF8_ROUND_CORNERS)
+        .set_content_arrangement(ContentArrangement::Dynamic)
+        .set_width(40)
+        .set_header(vec!["S/N", "Name", "Description"]);
 
     for (index, line) in reader.lines().into_iter().enumerate() {
-        println!("{}: {}", index + 1, line.unwrap());
+        let line = line.expect("Failed to read line");
+        let todo: Todo = match serde_json::from_str(&line) {
+            Ok(todo) => todo,
+            Err(e) => {
+                println!("Failed to parse line {}. Error is {} ", line, e);
+                continue;
+            }
+        };
+
+        table.add_row(vec![
+            Cell::new(index + 1),
+            Cell::new(todo.name),
+            Cell::new(todo.description),
+        ]);
     }
+    println!("{table}");
 }
 
 fn delete_todo(file_name: &str, delete_index: i32) {
