@@ -69,7 +69,7 @@ fn save_to_file(t: &Todo) {
 }
 
 fn read_from_file(file_name: &str) {
-    let f = File::open(file_name).unwrap();
+    let f = File::open(file_name).expect("Error opening File");
     let reader = BufReader::new(f);
     let mut table = Table::new();
     table
