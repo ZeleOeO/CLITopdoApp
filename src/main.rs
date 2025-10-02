@@ -9,9 +9,8 @@
 
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
-use std::io::{self, BufRead, BufReader, BufWriter, Write};
+use std::io::{BufRead, BufReader, Write};
 
 #[derive(Parser)]
 #[command(name = "todo_app")]
@@ -77,6 +76,6 @@ fn read_from_file(file_name: &str) {
     let reader = BufReader::new(f);
 
     for (index, line) in reader.lines().into_iter().enumerate() {
-        println!("{}: {}", index, line.unwrap());
+        println!("{}: {}", index + 1, line.unwrap());
     }
 }
